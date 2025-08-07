@@ -76,10 +76,21 @@ else
     mkdir -p /opt/rustyproxy > /dev/null 2>&1
     increment_step
 
+    # ---->>>> Instalar python3 e pip (Movido para antes da compilação)
+    show_progress "Instalando python3 e pip..."
+    apt-get install python3 python3-pip -y > /dev/null 2>&1 || error_exit "Falha ao instalar python3 e pip"
+    increment_step
+
+    # ---->>>> Instalar a biblioteca rich (Movido para antes da compilação)
+    show_progress "Instalando a biblioteca rich..."
+    pip3 install rich > /dev/null 2>&1 || error_exit "Falha ao instalar a biblioteca rich"
+    increment_step
+
     # ---->>>> Instalar rust
     show_progress "Instalando Rust..."
     if ! command -v rustc &> /dev/null; then
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y > /dev/null 2>&1 || error_exit "Falha ao instalar Rust"
+        curl --proto 
+=https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y > /dev/null 2>&1 || error_exit "Falha ao instalar Rust"
         source "$HOME/.cargo/env"
     fi
     increment_step
@@ -91,10 +102,9 @@ else
         rm -rf /root/RustyProxyOnly
     fi
 
-
     git clone --branch "main" https://github.com/mycroft440/rustyproxy.git /root/RustyProxyOnly > /dev/null 2>&1 || error_exit "Falha ao clonar rustyproxy"
-    mv /root/RustyProxyOnly/RustyProxyOnly-main/menu.py /opt/rustyproxy/menu.py
-    cd /root/RustyProxyOnly/RustyProxy
+    mv /root/RustyProxyOnly/menu.py /opt/rustyproxy/menu.py
+    cd /root/RustyProxyOnly
     cargo build --release --jobs $(nproc) > /dev/null 2>&1 || error_exit "Falha ao compilar rustyproxy"
     mv ./target/release/RustyProxy /opt/rustyproxy/proxy
     increment_step
@@ -103,7 +113,7 @@ else
     show_progress "Configurando permissões..."
     chmod +x /opt/rustyproxy/proxy
     chmod +x /opt/rustyproxy/menu.py
-    echo '#!/bin/bash\npython3 /opt/rustyproxy/menu.py "$@"' | sudo tee /usr/local/bin/rustyproxy > /dev/null
+    echo '#!/usr/bin/python3\nimport os\nimport sys\nsys.path.append(\'/opt/rustyproxy\')\nos.execv(\'/usr/bin/python3\', [\'python3\', \'/opt/rustyproxy/menu.py\'] + sys.argv[1:])' | sudo tee /usr/local/bin/rustyproxy > /dev/null
     chmod +x /usr/local/bin/rustyproxy
     increment_step
 
@@ -116,16 +126,5 @@ else
     # ---->>>> Instalação finalizada :)
     echo "Instalação concluída com sucesso. Digite 'rustyproxy' para acessar o menu."
 fi
-
-
-    # ---->>>> Instalar python3 e pip
-    show_progress "Instalando python3 e pip..."
-    apt-get install python3 python3-pip -y > /dev/null 2>&1 || error_exit "Falha ao instalar python3 e pip"
-    increment_step
-
-    # ---->>>> Instalar a biblioteca rich
-    show_progress "Instalando a biblioteca rich..."
-    pip3 install rich > /dev/null 2>&1 || error_exit "Falha ao instalar a biblioteca rich"
-    increment_step
 
 
