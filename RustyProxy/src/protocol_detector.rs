@@ -2,7 +2,21 @@ pub enum Protocol {
     SSH,
     OpenVPN,
     V2Ray,
+    HTTP,
     Unknown,
+}
+
+impl PartialEq for Protocol {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Protocol::SSH, Protocol::SSH) => true,
+            (Protocol::OpenVPN, Protocol::OpenVPN) => true,
+            (Protocol::V2Ray, Protocol::V2Ray) => true,
+            (Protocol::HTTP, Protocol::HTTP) => true,
+            (Protocol::Unknown, Protocol::Unknown) => true,
+            _ => false,
+        }
+    }
 }
 
 impl Protocol {
@@ -11,12 +25,20 @@ impl Protocol {
             Protocol::SSH => "SSH",
             Protocol::OpenVPN => "OpenVPN",
             Protocol::V2Ray => "V2Ray",
+            Protocol::HTTP => "HTTP",
             Protocol::Unknown => "Unknown",
         }
     }
 }
 
 pub fn detect_protocol(data: &[u8]) -> Protocol {
+    // HTTP: Requisições HTTP geralmente começam com métodos como GET, POST, PUT, DELETE, etc.
+    if data.starts_with(b"GET ") || data.starts_with(b"POST ") || data.starts_with(b"PUT ") ||
+       data.starts_with(b"DELETE ") || data.starts_with(b"HEAD ") || data.starts_with(b"OPTIONS ") ||
+       data.starts_with(b"CONNECT ") || data.starts_with(b"TRACE ") || data.starts_with(b"PATCH ") {
+        return Protocol::HTTP;
+    }
+
     // SSH: O protocolo SSH começa com "SSH-"
     if data.starts_with(b"SSH-") {
         return Protocol::SSH;
