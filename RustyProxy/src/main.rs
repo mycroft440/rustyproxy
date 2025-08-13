@@ -2,6 +2,7 @@ use std::env;
 use std::io::Error;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
+use tokio::time::{timeout, Duration};
 
 mod protocol_detector;
 use protocol_detector::{detect_protocol, Protocol};
@@ -29,9 +30,10 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_client(mut client_stream: TcpStream) -> Result<(), Error> {
+    // Peek the initial data to detect protocol without consuming it
     let mut buffer = vec![0; 8192];
-    let bytes_read = client_stream.read(&mut buffer).await?;
-    let initial_data = &buffer[..bytes_read];
+    let bytes_peeked = client_stream.peek(&mut buffer).await?;
+    let initial_data = &buffer[..bytes_peeked];
 
     let detected_protocol = detect_protocol(initial_data);
 
@@ -62,10 +64,14 @@ async fn handle_client(mut client_stream: TcpStream) -> Result<(), Error> {
         }
     };
 
+    // Now read the initial data from the client stream
+    let bytes_read = client_stream.read(&mut buffer).await?;
+    let initial_data_actual = &buffer[..bytes_read];
+
     let (mut client_read, mut server_write) = client_stream.into_split();
     let (mut server_read, mut client_write) = server_stream.into_split();
 
-    server_write.write_all(initial_data).await?;
+    server_write.write_all(initial_data_actual).await?;
 
     let client_to_server = tokio::io::copy(&mut client_read, &mut server_write);
     let server_to_client = tokio::io::copy(&mut server_read, &mut client_write);
