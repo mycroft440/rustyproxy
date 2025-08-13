@@ -83,7 +83,7 @@ else
 
     # ---->>>> Instalar a biblioteca rich (Movido para antes da compilação)
     show_progress "Instalando a biblioteca rich..."
-    pip3 install rich > /dev/null 2>&1 || error_exit "Falha ao instalar a biblioteca rich"
+    apt-get install python3-rich -y > /dev/null 2>&1 || error_exit "Falha ao instalar a biblioteca rich"
     increment_step
 
     # ---->>>> Instalar rust
