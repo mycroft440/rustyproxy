@@ -89,8 +89,7 @@ else
     # ---->>>> Instalar rust
     show_progress "Instalando Rust..."
     if ! command -v rustc &> /dev/null; then
-        curl --proto 
-=https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y > /dev/null 2>&1 || error_exit "Falha ao instalar Rust"
+        curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y > /dev/null 2>&1 || error_exit "Falha ao instalar Rust"
         source "$HOME/.cargo/env"
     fi
     increment_step
@@ -104,7 +103,7 @@ else
 
     git clone --branch "main" https://github.com/mycroft440/rustyproxy.git /root/RustyProxyOnly > /dev/null 2>&1 || error_exit "Falha ao clonar rustyproxy"
     mv /root/RustyProxyOnly/menu.py /opt/rustyproxy/menu.py
-    cd /root/RustyProxyOnly
+    cd /root/RustyProxyOnly/RustyProxy
     cargo build --release --jobs $(nproc) > /dev/null 2>&1 || error_exit "Falha ao compilar rustyproxy"
     mv ./target/release/RustyProxy /opt/rustyproxy/proxy
     increment_step
@@ -113,18 +112,14 @@ else
     show_progress "Configurando permissões..."
     chmod +x /opt/rustyproxy/proxy
     chmod +x /opt/rustyproxy/menu.py
-    echo '#!/usr/bin/python3\nimport os\nimport sys\nsys.path.append(\'/opt/rustyproxy\')\nos.execv(\'/usr/bin/python3\', [\'python3\', \'/opt/rustyproxy/menu.py\'] + sys.argv[1:])' | sudo tee /usr/local/bin/rustyproxy > /dev/null
+    echo -e "#!/usr/bin/python3\nimport os\nimport sys\nsys.path.append(\"/opt/rustyproxy\")\nos.execv(\"/usr/bin/python3\", [\"python3\", \"/opt/rustyproxy/menu.py\"] + sys.argv[1:])" | sudo tee /usr/local/bin/rustyproxy > /dev/null
     chmod +x /usr/local/bin/rustyproxy
     increment_step
 
     # ---->>>> Limpeza
-    show_progress "Limpando diretórios temporários..."
-    cd /root/
     rm -rf /root/RustyProxyOnly/
     increment_step
 
     # ---->>>> Instalação finalizada :)
     echo "Instalação concluída com sucesso. Digite 'rustyproxy' para acessar o menu."
 fi
-
-
